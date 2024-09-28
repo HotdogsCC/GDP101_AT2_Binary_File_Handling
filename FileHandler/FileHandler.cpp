@@ -8,8 +8,8 @@ using namespace std;
 struct Player
 {
     string name;
-    int score;
-    time_t time;
+    int score = 0;
+    time_t time = 0;
 };
 
 int SelectMode()
@@ -67,8 +67,13 @@ void Reading()
     {
         Player newPlayer;
 
-        file.read((char*)&newPlayer, sizeof(Player));
-        cout << newPlayer.name;
+        while (!file.eof() && file.peek() != EOF)
+        {
+            file.read((char*)&newPlayer, sizeof(Player));
+            cout << newPlayer.name << endl;
+            cout << newPlayer.score << endl;
+            cout << newPlayer.time;
+        }
     }
     file.close();
 }
@@ -86,7 +91,7 @@ int main()
     }
     else if (choice == 2)
     {
-        std::cout << "You have selected read mode.";
+        std::cout << "You have selected read mode.\n";
         Reading();
     }
     else
