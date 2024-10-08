@@ -3,31 +3,37 @@
 #include <ctime>
 #include <fstream>
 
-using namespace std;
+using std::string;
+using std::ofstream;
+using std::ifstream;
 
 struct Player
 {
-    string name;
+    char name[32] = "";
     int score = 0;
     time_t time = 0;
 };
 
 int SelectMode()
 {
+    system("CLS");
     string choiceInput;
     while (true)
     {
+        std::cout << "Welcome to the High Score Saving System!\n";
         std::cout << "What would you like to do?\n\n";
 
-        std::cout << "1. Enter data\n";
-        std::cout << "2. Read data\n\n";
+        std::cout << "1. Enter data entry\n";
+        std::cout << "2. Lookup player high score\n";
+        std::cout << "3. Read data\n";
+        std::cout << "4. Close\n\n";
 
-        std::cout << "Enter either 1 or 2.\n";
+        std::cout << "Enter 1, 2, 3, or 4.\n";
         std::cout << "Choice: ";
-        cin >> choiceInput;
+        std::cin >> choiceInput;
 
         system("CLS");
-        if (choiceInput.compare("1") == 0 || choiceInput.compare("2") == 0)
+        if (choiceInput.compare("1") == 0 || choiceInput.compare("2") == 0 || choiceInput.compare("3") == 0 || choiceInput.compare("4") == 0)
         {
             return std::stoi(choiceInput);
         }
@@ -40,29 +46,53 @@ int SelectMode()
 
 void DataEntry()
 {
-    ofstream file("high.scores", ios::out | ios::binary);
+    ofstream file("high.scores", std::ios::out | std::ios::binary);
     if (file.good())
     {
         Player newPlayer;
 
-        std::cout << "Please enter the name of the player.\n";
+        std::cout << "Please enter the name of the player.\nSpaces are not allowed.\n";
         std::cout << "Name: ";
-        cin >> newPlayer.name;
+        std::cin >> newPlayer.name;
 
         std::cout << "\nPlease enter the score of the player.\n";
         std::cout << "Score: ";
-        cin >> newPlayer.score;
+        std::cin >> newPlayer.score;
 
         newPlayer.time = time(0);
 
         file.write((char*)&newPlayer, sizeof(Player));
+
+        char timeStr[26];
+        ctime_s(timeStr, sizeof(timeStr), &newPlayer.time);
+        std::cout << "\nSuccessfully saved " << newPlayer.name << " with a score of " << newPlayer.score << " at " << timeStr;
+        
+        std::cout << "\n";
+        system("pause");
+        SelectMode();
     }
     file.close();
 }
 
+void Lookup()
+{
+    ofstream file("high.scores", std::ios::out | std::ios::binary);
+    if (file.good())
+    {
+        Player newPlayer;
+
+        std::cout << "Please enter the name of the player.\nSpaces are not allowed.\n";
+        std::cout << "Name: ";
+        std::cin >> newPlayer.name;
+    }
+    file.close();
+
+}
+
 void Reading()
 {
-    ifstream file("high.scores", ios::in | ios::binary);
+    ifstream file;
+    file.open("high.scores", std::ios::in | std::ios::binary);
     if (file.good())
     {
         Player newPlayer;
@@ -70,17 +100,17 @@ void Reading()
         while (!file.eof() && file.peek() != EOF)
         {
             file.read((char*)&newPlayer, sizeof(Player));
-            cout << newPlayer.name << endl;
-            cout << newPlayer.score << endl;
-            cout << newPlayer.time;
+            std::cout << newPlayer.name << std::endl;
+            std::cout << newPlayer.score << std::endl;
+            std::cout << newPlayer.time;
         }
     }
     file.close();
+    system("pause");
 }
 
 int main()
 {
-    std::cout << "Welcome to the High Score Saving System!\n";
     int choice = SelectMode();
     
 
@@ -91,8 +121,16 @@ int main()
     }
     else if (choice == 2)
     {
+        std::cout << "You have selected lookup mode.\n";
+    }
+    else if (choice == 3)
+    {
         std::cout << "You have selected read mode.\n";
         Reading();
+    }
+    else if (choice == 4)
+    {
+        return 0;
     }
     else
     {
