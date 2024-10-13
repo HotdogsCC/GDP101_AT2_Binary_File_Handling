@@ -40,13 +40,14 @@ int SelectMode()
         else
         {
             std::cout << "Sorry, that input wasn't recognised.\n\n";
+            choiceInput = "0";
         }
     }
 }
 
 void DataEntry()
 {
-    ofstream file("high.scores", std::ios::out | std::ios::binary);
+    ofstream file("high.scores", std::ios::app | std::ios::binary);
     if (file.good())
     {
         Player newPlayer;
@@ -68,24 +69,60 @@ void DataEntry()
         std::cout << "\nSuccessfully saved " << newPlayer.name << " with a score of " << newPlayer.score << " at " << timeStr;
         
         std::cout << "\n";
-        system("pause");
-        SelectMode();
+
+        std::cin.clear(); //clear bad input flag
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //discard input
+    }
+    else 
+    {
+        std::cout << "Failed to open high.scores.\n";
     }
     file.close();
+    system("pause");
 }
 
 void Lookup()
 {
-    ofstream file("high.scores", std::ios::out | std::ios::binary);
+    ifstream file("high.scores", std::ios::in | std::ios::binary);
     if (file.good())
     {
-        Player newPlayer;
+        char nameInput[32];
 
         std::cout << "Please enter the name of the player.\nSpaces are not allowed.\n";
         std::cout << "Name: ";
-        std::cin >> newPlayer.name;
+        std::cin >> nameInput;
+
+        Player newPlayer;
+
+        while (!file.eof() && file.peek() != EOF)
+        {
+            file.read((char*)&newPlayer, sizeof(Player));
+
+            bool isSame = true;
+            for (int i = 0; i < 32; i++)
+            {
+                if (nameInput[i] != newPlayer.name[i])
+                {
+                    isSame = false;
+                }
+                else
+                {
+                    if (nameInput[i] == '\0')
+                    {
+                        break;
+                    }
+                }
+            }
+            if (isSame)
+            {
+                std::cout << newPlayer.name << std::endl;
+                std::cout << newPlayer.score << std::endl;
+                std::cout << newPlayer.time << std::endl << std::endl;
+            }
+        }
     }
     file.close();
+    system("pause");
 
 }
 
@@ -95,15 +132,38 @@ void Reading()
     file.open("high.scores", std::ios::in | std::ios::binary);
     if (file.good())
     {
-        Player newPlayer;
+        int playerCount = 0;
 
+        Player newPlayer;
+        //checks how many players are stored;
         while (!file.eof() && file.peek() != EOF)
         {
             file.read((char*)&newPlayer, sizeof(Player));
-            std::cout << newPlayer.name << std::endl;
-            std::cout << newPlayer.score << std::endl;
-            std::cout << newPlayer.time;
+            playerCount++;
         }
+        std::cout << "There are this amount of players: " << playerCount << "\n\n";
+
+        //closes and reopens to reset file peek
+        file.close();
+        Player* playerArray = new Player[playerCount];
+        file.open("high.scores", std::ios::in | std::ios::binary);
+        if (file.good())
+        {
+            //don't need to check for EOF as we already know how large the file is from previous loop
+            file.read((char*)playerArray, sizeof(Player) * playerCount);
+
+            for(int i = 0; i < playerCount; i++)
+            {
+                std::cout << playerArray[i].name << std::endl;
+                std::cout << playerArray[i].score << std::endl;
+                std::cout << playerArray[i].time;
+                std::cout << "\n\n";
+            }
+
+            
+        }
+        file.close();
+        delete[] playerArray;
     }
     file.close();
     system("pause");
@@ -111,29 +171,34 @@ void Reading()
 
 int main()
 {
-    int choice = SelectMode();
-    
+    while (true)
+    {
+        int choice = SelectMode();
 
-    if (choice == 1)
-    {
-        std::cout << "You have selected data entry mode.\n\n";
-        DataEntry();
-    }
-    else if (choice == 2)
-    {
-        std::cout << "You have selected lookup mode.\n";
-    }
-    else if (choice == 3)
-    {
-        std::cout << "You have selected read mode.\n";
-        Reading();
-    }
-    else if (choice == 4)
-    {
-        return 0;
-    }
-    else
-    {
-        std::cout << "It appears something has gone wrong.";
+
+        if (choice == 1)
+        {
+            std::cout << "You have selected data entry mode.\n\n";
+            DataEntry();
+        }
+        else if (choice == 2)
+        {
+            std::cout << "You have selected lookup mode.\n";
+            Lookup();
+        }
+        else if (choice == 3)
+        {
+            std::cout << "You have selected read mode.\n";
+            Reading();
+        }
+        else if (choice == 4)
+        {
+            return 0;
+        }
+        else
+        {
+            std::cout << "It appears something has gone wrong.";
+            return 1;
+        }
     }
 }
