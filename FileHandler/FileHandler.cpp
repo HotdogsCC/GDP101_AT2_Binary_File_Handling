@@ -2,6 +2,7 @@
 #include <string>
 #include <ctime>
 #include <fstream>
+#include "FileHandler.h"
 
 using std::string;
 using std::ofstream;
@@ -67,11 +68,13 @@ void DataEntry()
         char timeStr[26];
         ctime_s(timeStr, sizeof(timeStr), &newPlayer.time);
         std::cout << "\nSuccessfully saved " << newPlayer.name << " with a score of " << newPlayer.score << " at " << timeStr;
-        
+
         std::cout << "\n";
 
         std::cin.clear(); //clear bad input flag
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); //discard input
+        file.close();
+        SortFile();
     }
     else 
     {
@@ -79,6 +82,70 @@ void DataEntry()
     }
     file.close();
     system("pause");
+}
+
+int GetPlayerCount()
+{
+    int playerCount = 0;
+    ifstream file;
+    file.open("high.scores", std::ios::in | std::ios::binary);
+    if (file.good())
+    {
+        Player newPlayer;
+        //checks how many players are stored;
+        while (!file.eof() && file.peek() != EOF)
+        {
+            file.read((char*)&newPlayer, sizeof(Player));
+            playerCount++;
+        }
+    }
+    file.close();
+    return playerCount;
+}
+
+void SortFile()
+{
+    int playerCount = GetPlayerCount();
+    ifstream file;
+    file.open("high.scores", std::ios::in | std::ios::binary);
+    if (file.good())
+    {
+        Player* playerArray = new Player[playerCount];
+        //don't need to check for EOF as we already know how large the file is from previous loop
+        file.read((char*)playerArray, sizeof(Player) * playerCount);
+
+        //bubble sort players by name
+        for (int i = 0; i < playerCount - 1; i++)
+        {
+            for (int j = 0; j < playerCount - 1; j++)
+            {
+                //Checks which string is 'bigger', i.e. alphabetical order
+                int value = strcmp(playerArray[j].name, playerArray[j + 1].name);
+                //Condition is true if first string is 'bigger', i.e. "Bob" and "Annie"
+                if (value > 0)
+                {
+                    //Swaps valyes
+                    char temp[32];
+
+                    Player tempPlayer;
+                    tempPlayer = playerArray[j];
+                    playerArray[j] = playerArray[j + 1];
+                    playerArray[j+1] = tempPlayer;
+                }
+            }
+        }
+        file.close();
+
+        ofstream fileOut("high.scores", std::ios::out | std::ios::binary);
+        if (fileOut.good())
+        {
+            fileOut.write((char*)playerArray, sizeof(Player) * playerCount);
+        }
+
+        fileOut.close();
+        delete[] playerArray;
+    }
+    file.close();
 }
 
 void Lookup()
@@ -98,22 +165,7 @@ void Lookup()
         {
             file.read((char*)&newPlayer, sizeof(Player));
 
-            bool isSame = true;
-            for (int i = 0; i < 32; i++)
-            {
-                if (nameInput[i] != newPlayer.name[i])
-                {
-                    isSame = false;
-                }
-                else
-                {
-                    if (nameInput[i] == '\0')
-                    {
-                        break;
-                    }
-                }
-            }
-            if (isSame)
+            if (strcmp(nameInput, newPlayer.name) == 0)
             {
                 std::cout << newPlayer.name << std::endl;
                 std::cout << newPlayer.score << std::endl;
@@ -128,41 +180,22 @@ void Lookup()
 
 void Reading()
 {
+    int playerCount = GetPlayerCount();
     ifstream file;
     file.open("high.scores", std::ios::in | std::ios::binary);
     if (file.good())
     {
-        int playerCount = 0;
-
-        Player newPlayer;
-        //checks how many players are stored;
-        while (!file.eof() && file.peek() != EOF)
-        {
-            file.read((char*)&newPlayer, sizeof(Player));
-            playerCount++;
-        }
-        std::cout << "There are this amount of players: " << playerCount << "\n\n";
-
-        //closes and reopens to reset file peek
-        file.close();
         Player* playerArray = new Player[playerCount];
-        file.open("high.scores", std::ios::in | std::ios::binary);
-        if (file.good())
+        //don't need to check for EOF as we already know how large the file is from previous loop
+        file.read((char*)playerArray, sizeof(Player) * playerCount);
+
+        for (int i = 0; i < playerCount; i++)
         {
-            //don't need to check for EOF as we already know how large the file is from previous loop
-            file.read((char*)playerArray, sizeof(Player) * playerCount);
-
-            for(int i = 0; i < playerCount; i++)
-            {
-                std::cout << playerArray[i].name << std::endl;
-                std::cout << playerArray[i].score << std::endl;
-                std::cout << playerArray[i].time;
-                std::cout << "\n\n";
-            }
-
-            
+            std::cout << playerArray[i].name << std::endl;
+            std::cout << playerArray[i].score << std::endl;
+            std::cout << playerArray[i].time;
+            std::cout << "\n\n";
         }
-        file.close();
         delete[] playerArray;
     }
     file.close();
