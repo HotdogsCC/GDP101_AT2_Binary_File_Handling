@@ -169,7 +169,9 @@ void Lookup()
             {
                 std::cout << newPlayer.name << std::endl;
                 std::cout << newPlayer.score << std::endl;
-                std::cout << newPlayer.time << std::endl << std::endl;
+                char timeStr[26];
+                ctime_s(timeStr, sizeof(timeStr), &newPlayer.time);
+                std::cout << timeStr << std::endl << std::endl;
             }
         }
     }
@@ -193,7 +195,9 @@ void Reading()
         {
             std::cout << playerArray[i].name << std::endl;
             std::cout << playerArray[i].score << std::endl;
-            std::cout << playerArray[i].time;
+            char timeStr[26];
+            ctime_s(timeStr, sizeof(timeStr), &playerArray[i].time);
+            std::cout << timeStr;
             std::cout << "\n\n";
         }
         delete[] playerArray;
@@ -221,7 +225,7 @@ int main()
         }
         else if (choice == 3)
         {
-            std::cout << "You have selected read mode.\n";
+            std::cout << "You have selected read mode.\n\n";
             Reading();
         }
         else if (choice == 4)
